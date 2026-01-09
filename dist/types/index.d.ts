@@ -139,7 +139,8 @@ type RecordStopCallBackType = (url: string, file: Blob) => void;
  * ```ts
  *   // 初始化录制
  *   const record = new Record({downloadRecord: true})
- *   record.startRecord([73, 77, 75, 72, ...]) // 开始录制
+ *   record.startRecord([73, 77, 75, 72, ...]) // 设置流头
+ *   record.inputData([...]) // 开始录制
  *   record.stopRecord()  // 停止录制
  *   record.destroy()  // 销毁
  * ```
@@ -162,7 +163,7 @@ declare class Record$1 {
     static getHKHead(type: 'flv' | 'ps' | 'rtp' | 'ts', videoCodec: 'h264' | 'h265', audioCodec: 'aac' | 'g711_a' | 'g711_u' | 'g722', audioSimpleRate: '8000' | '16000' | '32000' | '44100' | '48000'): Uint8Array;
     /**
      * 开始录像
-     * @param aHead 视频流头数据 40位 (必须是海康的流头)
+     * @param aHead 视频流头数据 40位 (必须是海康的流头),  flv流 仅支持 AAC + 16k 音频录制
      * @param name 文件名
      * @param stopCallBack 录制结束回调
      * @param secretKey 码流验证码（仅加密流需要）
