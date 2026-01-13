@@ -1,6 +1,6 @@
 {
   "name": "@ezuikit/player-plugin-record",
-  "version": "9.0.0-beta.2",
+  "version": "9.0.0-beta.3",
   "description": "萤石码流本地录制插件",
   "main": "dist/index.js",
   "umd": "dist/index.umd.js",
