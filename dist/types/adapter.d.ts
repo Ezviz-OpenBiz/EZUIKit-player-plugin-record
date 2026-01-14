@@ -1,12 +1,77 @@
 import * as _ezuikit_utils_service_dist_types_fetch from '@ezuikit/utils-service/dist/types/fetch';
 import { LoggerCls } from '@ezuikit/utils-logger/dist/types/logger';
 import { LoggerOptions } from '@ezuikit/utils-logger';
-import I18n from '@ezuikit/utils-i18n';
+import * as I18n from '@ezuikit/utils-i18n';
+import I18n__default from '@ezuikit/utils-i18n';
 import Service, { DeviceCapacityRes, DeviceInfoRes } from '@ezuikit/utils-service';
 import { EzopenURL } from '@ezuikit/utils-tools';
 import EventEmitter from 'eventemitter3';
+import PlayerRecordPlugin from '@ezuikit/player-plugin-record';
 
+/**
+ * 环境
+ */
+interface PlayerEnv {
+    domain: string;
+    wsUrl?: string;
+}
+interface PlayerOptions {
+    /**
+     * dom id
+     */
+    id: string;
+    /**
+     * 视频封面
+     */
+    poster?: string;
+    /**
+     * 播放地址
+     */
+    url: string;
+    /**
+     *
+     */
+    accessToken?: string;
+    /**
+     * 自动播放
+     */
+    autoPlay?: boolean;
+    /**
+     * 是否开启音频
+     */
+    audio?: boolean;
+    /**
+     * 环境变量
+     */
+    env?: PlayerEnv;
+    /**
+     * 打开流信息回调，监听 streamInfoCB 事件
+     * 0 : 每次都回调
+     * 1 : 只回调一次
+     * 注意：会影响性能
+     * 默认值 1
+     */
+    streamInfoCBType: 0 | 1;
+}
 interface IResult$1<T> {
+    data?: T;
+    code?: number;
+    msg?: string;
+}
+interface IFrameInfo {
+    codecType: number;
+    videoFormatName?: string;
+    width: number;
+    height: number;
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    second: number;
+}
+
+interface IResult<T> {
     data?: T;
     code?: number;
     msg?: string;
@@ -45,7 +110,7 @@ interface PlayerInterface extends EventEmitter {
      * @param {boolean} download 是否直接下载 默认不直接下载
      * @returns 返回base64字符
      */
-    snapshot: (name?: string, fmt?: 'jpeg', type?: 'base64', download?: boolean) => Promise<IResult$1<{
+    snapshot: (name?: string, fmt?: 'jpeg', type?: 'base64', download?: boolean) => Promise<IResult<{
         fileName?: string;
         base64?: string;
     } | null>>;
@@ -121,199 +186,6 @@ interface PlayerPlugin {
     exec: (player?: PlayerInterface) => void;
     afterExec?: (player?: PlayerInterface) => void;
     destroy?: (player?: PlayerInterface) => void;
-}
-
-/**
- * 环境
- */
-interface PlayerEnv {
-    domain: string;
-    wsUrl?: string;
-}
-interface PlayerOptions {
-    /**
-     * dom id
-     */
-    id: string;
-    /**
-     * 视频封面
-     */
-    poster?: string;
-    /**
-     * 播放地址
-     */
-    url: string;
-    /**
-     *
-     */
-    accessToken?: string;
-    /**
-     * 自动播放
-     */
-    autoPlay?: boolean;
-    /**
-     * 是否开启音频
-     */
-    audio?: boolean;
-    /**
-     * 环境变量
-     */
-    env?: PlayerEnv;
-    /**
-     * 打开流信息回调，监听 streamInfoCB 事件
-     * 0 : 每次都回调
-     * 1 : 只回调一次
-     * 注意：会影响性能
-     * 默认值 1
-     */
-    streamInfoCBType: 0 | 1;
-}
-interface IResult<T> {
-    data?: T;
-    code?: number;
-    msg?: string;
-}
-interface IFrameInfo {
-    codecType: number;
-    videoFormatName?: string;
-    width: number;
-    height: number;
-    year: number;
-    month: number;
-    day: number;
-    hour: number;
-    minute: number;
-    second: number;
-}
-
-interface IStreamClient {
-    /**
-     * @description 开流, 此时设备的流还没有发出来
-     * @param {string} szUrl 取流路径，如ws://hostname:port/channel
-     * @param {object} oParams 取流需要涉及的相关参数
-     * @param {function} cbMessage 消息回调函数
-     * @param {function} cbClose 关闭回调
-     * @returns {Promise<string>} 返回Promise对象 // 取流uuid，用于区分每条取流连接
-     */
-    openStream: (szUrl: string, oParams: object, cbMessage: (msg: object) => void, cbClose: () => void) => Promise<string>;
-    /**
-     * @description 开始取流
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     * @param {string} szStartTime 开始时间
-     * @param {string} szStopTime 结束时间
-     * @param {function} cbMessage 码流回调函数
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    startPlay: (id: string, szStartTime?: string, szStopTime?: string) => Promise<unknown>;
-    singleFrame: () => void;
-    /**
-     * @description 设置倍率
-     *
-     * @param {string} id websocket id在openStream的时候生成
-     * @param {number} iRate 播放倍率
-     *
-     * @returns {Promise<unknown>} Promise
-     */
-    setPlayRate: (id: string, iRate: number) => Promise<unknown>;
-    /**
-     * @description 定位回放
-     *
-     * @param {string} id websocket id在openStream的时候生成
-     * @param {string} szStartTime 开始时间
-     * @param {string} szStopTime 结束时间
-     *
-     * @returns {Promise<unknown>} Promise
-     */
-    seek: (id: string, szStartTime: string, szStopTime: string) => Promise<unknown>;
-    /**
-     * @description 暂停取流
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    pause: (id: string) => Promise<unknown>;
-    /**
-     * @description 透传协议
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     * @param {string} szCmd, 透传的命令码
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    transmission: (id: string, szCmd: string) => Promise<unknown>;
-    /**
-     * @description 恢复取流
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    resume: (id: string) => Promise<unknown>;
-    /**
-     * @description 停止取流
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    stop: (id: string) => Promise<unknown>;
-    stopAll: () => Promise<unknown>;
-}
-declare class StreamClient {
-    private readonly _player;
-    private _streamClient;
-    _streamUUID: string;
-    constructor(player: EZopenPlayer);
-    /**
-     * @description 开流, 此时设备的流还没有发出来
-     * @param {string} szUrl 取流路径，如ws://hostname:port/channel
-     * @param {object} oParams 取流需要涉及的相关参数
-     * @param {function} cbMessage 消息回调函数
-     * @param {function} cbClose 关闭回调
-     * @param {function} cbError 错误回调
-     * @returns {Promise<string>} 返回Promise对象 // 取流uuid，用于区分每条取流连接
-     */
-    openStream(szUrl: string, oParams: object, cbMessage: (msg: object) => void, cbClose: (id?: string) => void, cbError: (id?: string, msg?: any) => void): Promise<string>;
-    /**
-     * @description 开始取流
-     *
-     * @param {string} id websocket id，在openStream的时候生成
-     * @param {string} szStartTime 开始时间
-     * @param {string} szStopTime 结束时间
-     * @param {function} cbMessage 码流回调函数
-     *
-     * @returns {Promise<unknown>} 返回Promise对象
-     */
-    startPlay(id?: string): Promise<void>;
-    /**
-     * @description 设置播放速度
-     * @param rate 播放速度
-     * @param uuid websocket id，在openStream的时候生成
-     * @returns
-     */
-    setPlayRate(rate: number, id?: string): Promise<void>;
-    /**
-     * @description 定位回放
-     *
-     * @param {string} id websocket id在openStream的时候生成
-     * @param {string} startTime 开始时间
-     * @param {string} stopTime 结束时间
-     *
-     * @returns {Promise<unknown>} Promise
-     */
-    seek(startTime: string, stopTime: string, id?: string): Promise<void>;
-    /**
-     * @description 停止所有流
-     * @returns
-     */
-    stopAll(): Promise<void>;
-    /**
-     * @description 客户端销毁
-     */
-    destroy(): void;
 }
 
 declare class ESCanvas {
@@ -930,7 +802,7 @@ declare class EZopenPlayer extends EventEmitter {
         streamInfoCB: string; /** 全屏节点 */
     };
     logger: LoggerCls;
-    i18n: I18n;
+    i18n: I18n__default;
     wasmplayer: typeof JSPlayCtrl;
     /**
      * @deprecated
@@ -1032,7 +904,7 @@ declare class EZopenPlayer extends EventEmitter {
      * @param {boolean} canvas 是否使用 canvas
      * @returns 返回base64字符
      */
-    snapshot(name?: string, fmt?: SnapshotFmt, type?: 'base64', download?: boolean, canvas?: boolean): Promise<IResult<{
+    snapshot(name?: string, fmt?: SnapshotFmt, type?: 'base64', download?: boolean, canvas?: boolean): Promise<IResult$1<{
         fileName?: string | undefined;
         base64?: string | undefined;
     } | null>>;
@@ -1043,7 +915,7 @@ declare class EZopenPlayer extends EventEmitter {
      * @param {boolean} download 是否直接下载 默认不直接下载 false
      * @returns 返回base64字符
      */
-    snapshotByCanvas(name?: string, fmt?: SnapshotFmt, download?: boolean): Promise<IResult<{
+    snapshotByCanvas(name?: string, fmt?: SnapshotFmt, download?: boolean): Promise<IResult$1<{
         fileName?: string | undefined;
         base64?: string | undefined;
     } | null>>;
@@ -1221,4 +1093,194 @@ declare class EZopenPlayer extends EventEmitter {
     _addEventListener(): void;
 }
 
-export { type EZopenPlayerOptions, FECCorrect, type GlobalBaseTimeParams, type IFrameInfo, type IResult, type IStreamClient, type MirrorFlipCommand, type PlayerEnv, PluginManager, StreamClient, type WasmDecoderStatue, type WaterMarkParams, EZopenPlayer as default };
+declare class StreamClient {
+    private readonly _player;
+    private _streamClient;
+    _streamUUID: string;
+    constructor(player: EZopenPlayer);
+    /**
+     * @description 开流, 此时设备的流还没有发出来
+     * @param {string} szUrl 取流路径，如ws://hostname:port/channel
+     * @param {object} oParams 取流需要涉及的相关参数
+     * @param {function} cbMessage 消息回调函数
+     * @param {function} cbClose 关闭回调
+     * @param {function} cbError 错误回调
+     * @returns {Promise<string>} 返回Promise对象 // 取流uuid，用于区分每条取流连接
+     */
+    openStream(szUrl: string, oParams: object, cbMessage: (msg: object) => void, cbClose: (id?: string) => void, cbError: (id?: string, msg?: any) => void): Promise<string>;
+    /**
+     * @description 开始取流
+     *
+     * @param {string} id websocket id，在openStream的时候生成
+     * @param {string} szStartTime 开始时间
+     * @param {string} szStopTime 结束时间
+     * @param {function} cbMessage 码流回调函数
+     *
+     * @returns {Promise<unknown>} 返回Promise对象
+     */
+    startPlay(id?: string): Promise<void>;
+    /**
+     * @description 设置播放速度
+     * @param rate 播放速度
+     * @param uuid websocket id，在openStream的时候生成
+     * @returns
+     */
+    setPlayRate(rate: number, id?: string): Promise<void>;
+    /**
+     * @description 定位回放
+     *
+     * @param {string} id websocket id在openStream的时候生成
+     * @param {string} startTime 开始时间
+     * @param {string} stopTime 结束时间
+     *
+     * @returns {Promise<unknown>} Promise
+     */
+    seek(startTime: string, stopTime: string, id?: string): Promise<void>;
+    /**
+     * @description 停止所有流
+     * @returns
+     */
+    stopAll(): Promise<void>;
+    /**
+     * @description 客户端销毁
+     */
+    destroy(): void;
+}
+
+declare class JSPlugin {
+    constructor(props: any);
+    iWidth: any;
+    iHeight: any;
+    player: EZopenPlayer;
+    i18n: I18n.default;
+    downloadRecord: any;
+    _recordPlugin: PlayerRecordPlugin;
+    nWidth: number;
+    nHeight: number;
+    oStreamClient: StreamClient;
+    g_port: number;
+    get bPlay(): boolean;
+    get iRate(): number;
+    set playURL(arg: string);
+    get playURL(): string;
+    set FECSplitIds(arg: string | undefined);
+    get FECSplitIds(): string | undefined;
+    set correctType(arg: any);
+    get correctType(): any;
+    _initEventCallback(): void;
+    JSPlayM4_SetDecodeEngine(useHard: any): void;
+    useHard: any;
+    /**
+     *
+     * @param {*} szUrl  "示例：wss://jsdecoder-aeye.hwwt2.com:443"
+     * @param {*} oParams  "示例： {playURL: "/live?dev=F99467170&chn=9&stream=1&ssn=ot.9oovv27v00lck3ft0krfw61n8ugr4j5b-1ao1cqq1fm-1od8d0d-h1lnhi0w0&auth=1&biz=4&cln=100"}"
+     * @param {*} iWndNum
+     * @param {*} szStartTime
+     * @param {*} szStopTime
+     * @returns
+     */
+    JS_Play(szUrl: any, oParams: any, iWndNum: any, szStartTime: any, szStopTime: any): Promise<unknown>;
+    JS_SetSecretKey(iWndNum: any, secretKey: any): void;
+    secretKey: any;
+    JS_OpenSound(): number;
+    JS_CloseSound(): number;
+    /**
+     * @synopsis 打开3D放大
+     *
+     * @param {function} fCallback 回调函数
+     *
+     * @returns {none} 无
+     */
+    JS_Enable3DZoom(iWin: any, fCallback: Function): none;
+    JSPlayM4_SetDisplayRegion(left: any, right: any, top: any, bottom: any): void;
+    /**
+     * @synopsis 关闭3D放大
+     *
+     * @returns {none} 无
+     */
+    JS_Disable3DZoom(): none;
+    JS_StartSave(fileName: string | undefined, stopCallback: any, secretKey: any): Promise<void>;
+    JS_StopSave(download?: boolean): Promise<unknown>;
+    _JSPlayM4_GetFrameInfo(): IFrameInfo;
+    _JSPlayM4_SetDisplayRegion(left: any, right: any, top: any, bottom: any, flag: boolean | undefined, isFullScreen: any): boolean;
+    JS_CapturePicture(port: any, fileName: any, format: any, callback: any, download: any, canvas: any): Promise<any>;
+    JS_GetOSDTime(): Promise<number>;
+    JS_Resize(width: any, height: any): void;
+    JS_GetSDKVersion(): any;
+    JS_Stop(flag: any): Promise<unknown>;
+    JS_DestroyWorker(): void;
+    JS_Speed(nextRate: any): void;
+    JS_Seek(iWndNum: any, szStartTime: any, szStopTime: any): Promise<void>;
+    /**
+     * @synopsis 暂停
+     *
+     * @param {number} iWndNum 窗口号
+     *
+     * @returns {none} 无
+     */
+    JS_Pause(iWndNum: number, date: any): none;
+    /**
+     * @synopsis 恢复
+     *
+     * @param {number} iWndNum 窗口号
+     *
+     * @returns {none} 无
+     */
+    JS_Resume(resumeTime: any): none;
+    /**
+     * @description
+     * @param {Object} type 矫正类型  参考 src/ezopen/constants.js
+     * @param {string} ids 如果分屏矫正，需要传入分屏canvas的id字符串列表 如 canvas1,canvas2,canvas3
+     * @returns {Array<{code: number, msg: string, port: number, id: string}>} // code= 0 成功， -1 失败
+     */
+    JS_FECCorrectType(type: any, ids: string): Array<{
+        code: number;
+        msg: string;
+        port: number;
+        id: string;
+    }>;
+    /**
+     * @description 设置 2D 鱼眼矫正旋转参数
+     * @param {number} fishSubPort 鱼眼端口 主屏默认为 0
+     * @param {Object} param2d
+     */
+    JS_FECSetParam2D(fishSubPort: number, param2d: any): any;
+    /**
+     * @description 设置 3D 矫正视角参数
+     * @param {FECViewParam} param
+     * @returns {Promise<boolean>}  true: 成功  false: 失败  undefined: 不支持
+     */
+    FEC_Set3DViewParam(param: FECViewParam): Promise<boolean>;
+    /**
+     * @description  获取 3D 矫正视角参数
+     * @param {FECGetViewParam} param
+     * @returns {Promise<object>}
+     */
+    FEC_Get3DViewParam(param: FECGetViewParam): Promise<object>;
+    /**
+     * @description 开启水印
+     * @param {object} params 开启水印参数
+     * fontString：文本信息（必填）
+     * startPos：文本位置
+     * fontColor：字体颜色
+     * fontSize：字体大小
+     * fontRotate：字体旋转角度
+     * fontFamily：字体
+     * @returns {Promise<object>}
+     */
+    JS_SetWaterMarkFont(params: object): Promise<object>;
+    /**
+     * @description 设置全局时间戳
+     * @param {number} year, month, day, hour, min, sec, ms：年/月/日/时/分/秒/毫秒
+     * @returns {code} 0:成功，非0：错误码
+     */
+    JS_SetGlobalBaseTime(params: any): code;
+    /**
+     * @description 设置抗锯齿
+     * @param {boolean} flag 抗锯齿开关
+     * @returns {code} 0:成功，非0：错误码
+     */
+    JS_SetAntialias(flag: boolean): code;
+}
+
+export { JSPlugin as default };
