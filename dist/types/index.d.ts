@@ -15,6 +15,10 @@ interface PlayerInterface extends EventEmitter {
     deviceCapacity: Record<string, any>;
     i18n: any;
     logger: any;
+    event: EventEmitter;
+    wasmplayer: any;
+    _wss_info: any;
+    _options: any;
     /**
      * 播放
      * @param options
@@ -117,22 +121,97 @@ interface PlayerPlugin {
     destroy?: (player?: PlayerInterface) => void;
 }
 
-interface PlayerPluginRecordProps {
+/**
+ * 录制配置项
+ */
+interface RecordOptions {
     /**
-     * @description 是否下载录制文件
+     * 是否下载录制文件
      * @default true
      */
     downloadRecord?: boolean;
 }
-type PlayerRecordInputDataFn = (data?: {
-    data: Uint8Array;
-}) => void;
 /**
- * @description ezopne 录制视频 仅支持chrome
+ * 录制停止回调
+ * @param url 录制文件地址
+ * @param file 录制文件
+ */
+type RecordStopCallBackType = (url: string, file: Blob) => void;
+/**
+ * 录制支持 PS 流和 FLV 流
+ * @example
+ * ```ts
+ *   // 初始化录制
+ *   const record = new Record({downloadRecord: true})
+ *   record.startRecord([73, 77, 75, 72, ...]) // 设置流头
+ *   record.inputData([...]) // 开始录制
+ *   record.stopRecord()  // 停止录制
+ *   record.destroy()  // 销毁
+ * ```
+ */
+declare class Record$1 {
+    szStorageUUID: string | null;
+    private _oStorageManager;
+    downloadRecord: boolean;
+    /**
+     * 录制支持 PS 流和 FLV 流
+     * @param options - 配置项
+     */
+    constructor(options: RecordOptions);
+    /**
+     * @param type 码流类型
+     * @param videoCodec 视频编码类型 （"h264" | "h265"）
+     * @param audioCodec  音频编码类型
+     * @param audioSimpleRate  音频采样率
+     */
+    static getHKHead(type: 'flv' | 'ps' | 'rtp' | 'ts', videoCodec: 'h264' | 'h265', audioCodec: 'aac' | 'g711_a' | 'g711_u' | 'g722', audioSimpleRate: '8000' | '16000' | '32000' | '44100' | '48000'): Uint8Array;
+    /**
+     * 开始录像
+     * @param aHead 视频流头数据 40位 (必须是海康的流头),  flv流 仅支持 AAC + 16k 音频录制
+     * @param name 文件名
+     * @param stopCallBack 录制结束回调
+     * @param secretKey 码流验证码（仅加密流需要）
+     * @returns {Promise<string>}
+     */
+    startRecord(aHead: Uint8Array, name?: string, stopCallBack?: RecordStopCallBackType, secretKey?: string): Promise<unknown>;
+    /**
+     * 往录像存储中输入数据
+     * @param buff 视频数据
+     */
+    inputData(buff: Uint8Array): void;
+    /**
+     * @description 往录像存储中输入水印数据
+     * @param buff 水印视频数据
+     */
+    inputWatermarkData(rawData: Uint8Array, info?: any): void;
+    /**
+     * 停止录像， 并根据 downloadRecord 的值进行判断是否下载文件
+     * @returns {Promise<string>}
+     */
+    stopRecord(): Promise<unknown>;
+    /**
+     * 销毁
+     * @returns {void}
+     */
+    destroy(): void;
+}
+
+/**
+ * 插件录制
+ */
+interface PlayerPluginRecordProps {
+    /**
+     * 是否下载录制文件
+     * @default true
+     */
+    downloadRecord?: boolean;
+}
+/**
+ * ezopne 录制视频
  * @example
  * ```ts
  * import EZopenPlayer from '@ezuikit/player-ezopen';
- * import PlayerPluginRecord from '@ezuikit/player-plugin-record';
+ * import { PlayerPluginRecord } from '@ezuikit/player-plugin-record';
  * // 播放地址 url 和 accessToken 从下面地址获取
  * // https://open.ys7.com/console/device.html
  * const player = new EZopenPlayer({
@@ -148,31 +227,37 @@ type PlayerRecordInputDataFn = (data?: {
 declare class PlayerPluginRecord implements PlayerPlugin {
     _player: PlayerInterface;
     readonly name: string;
+    /** 录制对象 */
     private _record;
+    /** 录制中 */
     recording: boolean;
-    _recordInputDataFn: PlayerRecordInputDataFn;
     constructor(props?: PlayerPluginRecordProps);
     /**
-     * @description 执行插件
-     * @param {PlayerInterface} player
+     * 执行插件
+     * @param {PlayerInterface} player 播放器
      */
     exec(player: PlayerInterface): void;
     /**
-     * @description 开始录制
+     * 开始录制
      * @param {string} fileName 视频文件名
      * @param {number=} port
      * @returns {Promise<string>}
      */
-    startRecord(fileName?: string, stopCallBack?: any, secretKey?: string): Promise<void>;
+    startRecord(fileName?: string, stopCallBack?: RecordStopCallBackType, secretKey?: string): Promise<void>;
     /**
-     * @description 停止录制
+     * 停止录制
      * @returns {Promise<string>}
      */
     stopRecord(): Promise<unknown>;
     /**
-     * @description 销毁
+     * 销毁
      */
     destroy(): void;
+    /**
+     * 输入录制数据
+     * @param data
+     */
+    private _recordInputDataFn;
 }
 
-export { type PlayerPluginRecordProps, type PlayerRecordInputDataFn, PlayerPluginRecord as default };
+export { PlayerPluginRecord, type PlayerPluginRecordProps, Record$1 as Record };
