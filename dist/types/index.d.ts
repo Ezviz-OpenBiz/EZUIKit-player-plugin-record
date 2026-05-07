@@ -260,4 +260,5 @@ declare class PlayerPluginRecord implements PlayerPlugin {
     private _recordInputDataFn;
 }
 
-export { PlayerPluginRecord, type PlayerPluginRecordProps, Record$1 as Record };
+export { PlayerPluginRecord, Record$1 as Record };
+export type { PlayerPluginRecordProps };
