@@ -94,4 +94,4 @@ jobs:
       #   run: pnpm run build
       # 发布npm 发布前执行了prepublishOnly
       - name: Publish npm
-        run: npm publish --tag ${{ steps.determine_tag.outputs.tag }} --access public
+        run: npm publish --tag ${{ steps.determine_tag.outputs.tag }} --access public --provenance
