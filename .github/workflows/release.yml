@@ -61,9 +61,9 @@ jobs:
       #     version: 8
       # 设置 Node
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
       - run: npm install -g npm@latest
