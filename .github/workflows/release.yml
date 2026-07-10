@@ -63,10 +63,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22 # Trusted Publishing 需要 Node >= 22.14.0
           registry-url: https://registry.npmjs.org
 
-      - run: npm install -g npm@10
+      # Trusted Publishing(OIDC) 需要 npm CLI >= 11.5.1
+      - run: npm install -g npm@latest
       # 安装依赖
       - name: npm Install dependencies
         run: npm install
@@ -92,6 +93,7 @@ jobs:
       # # 打包
       # - name: Build Packages
       #   run: pnpm run build
-      # 发布npm 发布前执行了prepublishOnly
+      # 通过 Trusted Publishing(OIDC) 发布，无需 NODE_AUTH_TOKEN，OIDC 自动认证
+      # provenance 在可信发布下会自动生成（本仓库为公开仓库，可正常生成）
       - name: Publish npm
         run: npm publish --tag ${{ steps.determine_tag.outputs.tag }} --access public --provenance
