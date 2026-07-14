@@ -1,6 +1,6 @@
 /*
 *
-* PlayerRecord.js v9.1.0-beta.12
+* PlayerRecord.js v9.1.0
 * Copyright (c) 2026-7-13 Ezviz-OpenBiz
 * Released under MIT the License.
 *
