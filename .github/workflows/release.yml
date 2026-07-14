@@ -114,8 +114,4 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ steps.determine_tag.outputs.tag != 'latest' }}
           files: |
-            dist/index.js
-            dist/index.umd.js
-            package.json
-            README.md
             Release.txt
