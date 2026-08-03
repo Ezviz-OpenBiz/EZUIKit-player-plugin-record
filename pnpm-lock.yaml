@@ -6,11 +6,11 @@ settings:
 
 dependencies:
   '@ezuikit/utils-tools':
-    specifier: 2.0.5
-    version: 2.0.5
+    specifier: ^2.0.6
+    version: 2.0.6
 
 packages:
 
-  /@ezuikit/utils-tools@2.0.5:
-    resolution: {integrity: sha512-7SR3kKQdColQ+Rz/PPaLzHi8Yv3RuhFUh3iMymonlO95OJSZBgjaTSX5QNeTnZIi57soNVoHByR4tS/JbMA4Wg==}
+  /@ezuikit/utils-tools@2.0.6:
+    resolution: {integrity: sha512-1XUk8IY28FpspjzgbbVEfcsRiwKx9l5ltjOYw9RYh3BK2XAKv2B2N+79RCQ1qfmjLVsHLx2H8xTwSJECSWcnqg==}
     dev: false
