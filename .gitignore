@@ -4,6 +4,9 @@ coverage
 .nyc_output
 .DS_Store
 *.log
+*.map
+**/*.map
+
 .idea
 compiled
 .awcache
