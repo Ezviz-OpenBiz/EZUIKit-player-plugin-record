@@ -1,16 +1,22 @@
-lockfileVersion: '6.0'
+lockfileVersion: '9.0'
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  '@ezuikit/utils-tools':
-    specifier: ^2.0.6
-    version: 2.0.6
+importers:
+
+  .:
+    dependencies:
+      '@ezuikit/utils-tools':
+        specifier: ^2.0.7
+        version: 2.0.8
 
 packages:
 
-  /@ezuikit/utils-tools@2.0.6:
-    resolution: {integrity: sha512-1XUk8IY28FpspjzgbbVEfcsRiwKx9l5ltjOYw9RYh3BK2XAKv2B2N+79RCQ1qfmjLVsHLx2H8xTwSJECSWcnqg==}
-    dev: false
+  '@ezuikit/utils-tools@2.0.8':
+    resolution: {integrity: sha512-PTSp7OUMpXtgyjtNVkX0WB6j0HuyBLJF1EEYapD7UtlrXnJR/75RrN1ghK38AoO1EeO20uIpZRTuQCfX8gU6cw==}
+
+snapshots:
+
+  '@ezuikit/utils-tools@2.0.8': {}
